@@ -11,7 +11,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import edu.hm.hafner.util.VisibleForTesting;
 
-import hudson.model.HealthReport;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 
@@ -38,17 +37,15 @@ class CoverageChecksPublisher {
     private final JenkinsFacade jenkinsFacade;
     private static final List<String> COVERAGE_TYPES =
             Arrays.asList("Report", "Group", "Package", "File", "Class", "Method", "Conditional", "Line", "Instruction");
-    private final String checksName;
 
-    CoverageChecksPublisher(final CoverageAction action, final String checksName) {
-        this(action, new JenkinsFacade(), checksName);
+    CoverageChecksPublisher(final CoverageAction action) {
+        this(action, new JenkinsFacade());
     }
 
     @VisibleForTesting
-    CoverageChecksPublisher(final CoverageAction action, final JenkinsFacade jenkinsFacade, final String checksName) {
+    CoverageChecksPublisher(final CoverageAction action, final JenkinsFacade jenkinsFacade) {
         this.jenkinsFacade = jenkinsFacade;
         this.action = action;
-        this.checksName = checksName;
     }
 
     void publishChecks(final TaskListener listener) {
@@ -61,12 +58,12 @@ class CoverageChecksPublisher {
         CoverageResult result = action.getResult();
         ChecksOutput output = new ChecksOutputBuilder()
                 .withTitle(extractChecksTitle(result))
-                .withSummary(extractComparedBuildsSummary(result) + extractHealthSummary())
+                .withSummary(extractComparedBuildsSummary(result) + extractHealthSummary(action))
                 .withText(extractChecksText(result))
                 .build();
 
         return new ChecksDetailsBuilder()
-                .withName(checksName)
+                .withName("Code Coverage")
                 .withStatus(ChecksStatus.COMPLETED)
                 .withConclusion(StringUtils.isBlank(action.getFailMessage()) ? ChecksConclusion.SUCCESS : ChecksConclusion.FAILURE)
                 .withDetailsURL(jenkinsFacade.getAbsoluteUrl(result.getOwner().getUrl(), action.getUrlName()))
@@ -188,19 +185,16 @@ class CoverageChecksPublisher {
         return summary.toString();
     }
 
-    private String extractHealthSummary() {
-        HealthReport buildHealth = action.getBuildHealth();
-        if (buildHealth != null) {
-            StringBuilder summary = new StringBuilder("## ")
-                    .append(buildHealth.getLocalizableDescription().toString())
-                    .append(".");
-            if (!StringUtils.isBlank(action.getFailMessage())) {
-                summary.append("\n## ")
-                        .append(action.getFailMessage());
-            }
-            return summary.toString();
+    private String extractHealthSummary(final CoverageAction action) {
+        StringBuilder summary = new StringBuilder("## ")
+                .append(action.getHealthReport().getLocalizableDescription().toString())
+                .append(".");
+        if (!StringUtils.isBlank(action.getFailMessage())) {
+            summary.append("\n## ")
+                    .append(action.getFailMessage());
         }
-        return StringUtils.EMPTY;
+
+        return summary.toString();
     }
 
     private Map<CoverageElement, Ratio> getLastRatios(final CoverageResult result) {
@@ -213,7 +207,7 @@ class CoverageChecksPublisher {
     }
 
     private Map<String, Float> convertRatios(final Map<CoverageElement, Ratio> ratios) {
-        Map<String, Float> converted = new HashMap<>(ratios.size());
+        Map<String, Float> converted = new HashMap<String, Float>(ratios.size());
         for (Map.Entry<CoverageElement, Ratio> singleRatio : ratios.entrySet()) {
             converted.put(singleRatio.getKey().getName(), singleRatio.getValue().getPercentageFloat());
         }

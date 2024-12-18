@@ -1,23 +1,19 @@
 package io.jenkins.plugins.coverage;
 
-import java.io.IOException;
-import java.lang.ref.WeakReference;
-import java.util.Collection;
-import java.util.Collections;
-
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-
-import org.apache.commons.lang.StringUtils;
-import org.kohsuke.stapler.StaplerProxy;
 import hudson.model.Action;
 import hudson.model.HealthReport;
 import hudson.model.HealthReportingAction;
 import hudson.model.Run;
+import io.jenkins.plugins.coverage.targets.CoverageResult;
 import jenkins.model.RunAction2;
 import jenkins.tasks.SimpleBuildStep;
+import org.kohsuke.stapler.StaplerProxy;
 
-import io.jenkins.plugins.coverage.model.CoverageBuildAction;
-import io.jenkins.plugins.coverage.targets.CoverageResult;
+import javax.annotation.CheckForNull;
+import java.io.IOException;
+import java.lang.ref.WeakReference;
+import java.util.Collection;
+import java.util.Collections;
 
 public class CoverageAction implements StaplerProxy, SimpleBuildStep.LastBuildAction, RunAction2, HealthReportingAction {
 
@@ -26,19 +22,24 @@ public class CoverageAction implements StaplerProxy, SimpleBuildStep.LastBuildAc
     private HealthReport healthReport;
     private String failMessage;
 
-    public CoverageAction(final CoverageResult result) {
+
+    public CoverageAction(CoverageResult result) {
         this.report = new WeakReference<>(result);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Collection<? extends Action> getProjectActions() {
-        if (isNewActionAvailable()) {
-            return Collections.emptyList();
-        }
         return Collections.singleton(new CoverageProjectAction(owner));
     }
 
-    @Override @CheckForNull
+
+    /**
+     * @return Health report
+     */
+    @Override
     public HealthReport getBuildHealth() {
         return getHealthReport();
     }
@@ -59,8 +60,7 @@ public class CoverageAction implements StaplerProxy, SimpleBuildStep.LastBuildAc
         CoverageResult coverageResult = null;
         try {
             coverageResult = CoverageProcessor.recoverCoverageResult(owner);
-        }
-        catch (IOException | ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
 
@@ -79,11 +79,12 @@ public class CoverageAction implements StaplerProxy, SimpleBuildStep.LastBuildAc
         return getResult();
     }
 
+
     public HealthReport getHealthReport() {
         return healthReport;
     }
 
-    public void setHealthReport(final HealthReport healthReport) {
+    public void setHealthReport(HealthReport healthReport) {
         this.healthReport = healthReport;
     }
 
@@ -91,19 +92,18 @@ public class CoverageAction implements StaplerProxy, SimpleBuildStep.LastBuildAc
         return failMessage;
     }
 
-    public void setFailMessage(final String failMessage) {
-        if (StringUtils.isBlank(this.failMessage)) {
-            this.failMessage = failMessage;
-        }
+    public void setFailMessage(String failMessage) {
+        this.failMessage = failMessage;
     }
 
-    private synchronized void setOwner(final Run<?, ?> owner) {
+    private synchronized void setOwner(Run<?, ?> owner) {
         this.owner = owner;
         if (report != null) {
             CoverageResult coverageResult = report.get();
             if (coverageResult != null) {
                 coverageResult.setOwner(owner);
             }
+
         }
     }
 
@@ -111,38 +111,47 @@ public class CoverageAction implements StaplerProxy, SimpleBuildStep.LastBuildAc
         return owner;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @CheckForNull
     @Override
     public String getIconFileName() {
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @CheckForNull
     @Override
     public String getDisplayName() {
         return Messages.CoverageAction_displayName();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @CheckForNull
     @Override
     public String getUrlName() {
-        if (isNewActionAvailable()) {
-            return null;
-        }
         return "coverage";
     }
 
-    public boolean isNewActionAvailable() {
-        return getOwner().getAction(CoverageBuildAction.class) != null;
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void onAttached(final Run<?, ?> r) {
+    public void onAttached(Run<?, ?> r) {
         setOwner(r);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void onLoad(final Run<?, ?> r) {
+    public void onLoad(Run<?, ?> r) {
         setOwner(r);
     }
+
 }

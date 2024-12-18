@@ -1,19 +1,15 @@
 package io.jenkins.plugins.coverage;
 
-import hudson.remoting.ClassFilter;
-import hudson.remoting.ObjectInputStreamEx;
-
 import java.io.*;
 
 /**
  * {@link io.jenkins.plugins.coverage.targets.CoverageElement} didn't have serialVersionUID. In order to keep
  * backwards compatibility, use this class to read serialized Object to avoid that serialVersionUID is different.
  */
-public class CompatibleObjectInputStream extends ObjectInputStreamEx {
+public class CompatibleObjectInputStream extends ObjectInputStream {
 
     public CompatibleObjectInputStream(InputStream in) throws IOException {
-        // TODO Use a classloader in this plugin, or uberClassLoader?
-        super(in, CoverageProcessor.class.getClassLoader(), ClassFilter.DEFAULT);
+        super(in);
     }
 
 

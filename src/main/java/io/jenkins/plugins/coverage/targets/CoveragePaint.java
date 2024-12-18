@@ -21,18 +21,13 @@
  */
 package io.jenkins.plugins.coverage.targets;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.lang3.ArrayUtils;
-
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 // Code adopted from Cobertura Plugin https://github.com/jenkinsci/cobertura-plugin/
 
@@ -43,11 +38,19 @@ import gnu.trove.map.hash.TIntObjectHashMap;
  * @since 29-Aug-2007 17:44:29
  */
 public class CoveragePaint implements Serializable {
+
+    /**
+     * Generated
+     */
     private static final long serialVersionUID = -6265259191856193735L;
 
     private static final CoveragePaintDetails[] EMPTY = new CoveragePaintDetails[0];
 
     private static class CoveragePaintDetails implements Serializable {
+
+        /**
+         * Generated
+         */
         private static final long serialVersionUID = -9097537016381444671L;
 
         /**
@@ -60,7 +63,7 @@ public class CoveragePaint implements Serializable {
          */
         final int hitCount;
 
-        static CoveragePaintDetails create(final int hitCount, final int branchCount, final int branchCoverage) {
+        static CoveragePaintDetails create(int hitCount, int branchCount, int branchCoverage) {
             if (branchCount == 0 && branchCoverage == 0) {
                 if (0 <= hitCount && hitCount < CONSTANTS.length) {
                     CoveragePaintDetails r = CONSTANTS[hitCount];
@@ -70,13 +73,12 @@ public class CoveragePaint implements Serializable {
                     return r;
                 }
                 return new CoveragePaintDetails(hitCount);
-            }
-            else {
+            } else {
                 return new BranchingCoveragePaintDetails(hitCount, branchCount, branchCoverage);
             }
         }
 
-        private CoveragePaintDetails(final int hitCount) {
+        private CoveragePaintDetails(int hitCount) {
             this.hitCount = hitCount;
         }
 
@@ -91,7 +93,7 @@ public class CoveragePaint implements Serializable {
         /**
          * Do 'this+that' and return the new object.
          */
-        CoveragePaintDetails add(final CoveragePaintDetails that) {
+        CoveragePaintDetails add(CoveragePaintDetails that) {
             return CoveragePaintDetails.create(
                     this.hitCount + that.hitCount,
                     // TODO find a better algorithm
@@ -101,8 +103,8 @@ public class CoveragePaint implements Serializable {
     }
 
     /**
-     * {@link CoveragePaintDetails} that has non-zero branch coverage numbers. This is relatively rare, so we use two
-     * classes to save 8 bytes of storing 0.
+     * {@link CoveragePaintDetails} that has non-zero branch coverage numbers.
+     * This is relatively rare, so we use two classes to save 8 bytes of storing 0.
      */
     private static class BranchingCoveragePaintDetails extends CoveragePaintDetails {
 
@@ -110,7 +112,7 @@ public class CoveragePaint implements Serializable {
 
         final int branchCoverage;
 
-        private BranchingCoveragePaintDetails(final int hitCount, final int branchCount, final int branchCoverage) {
+        private BranchingCoveragePaintDetails(int hitCount, int branchCount, int branchCoverage) {
             super(hitCount);
             this.branchCount = branchCount;
             this.branchCoverage = branchCoverage;
@@ -129,34 +131,33 @@ public class CoveragePaint implements Serializable {
         private static final long serialVersionUID = 1L;
     }
 
-    protected TIntObjectMap<CoveragePaintDetails> lines = new TIntObjectHashMap<>();
+    protected TIntObjectMap<CoveragePaintDetails> lines = new TIntObjectHashMap<CoveragePaintDetails>();
 
     private int totalLines = 0;
 
-    public CoveragePaint(final CoverageElement source) {
+    public CoveragePaint(CoverageElement source) {
 //		there were no getters against the source ...
 //      this.source = source;
     }
 
-    private void paint(final int line, final CoveragePaintDetails delta) {
+    private void paint(int line, CoveragePaintDetails delta) {
         CoveragePaintDetails d = lines.get(line);
         if (d == null) {
             lines.put(line, delta);
-        }
-        else {
+        } else {
             lines.put(line, d.add(delta));
         }
     }
 
-    public void paint(final int line, final int hits) {
+    public void paint(int line, int hits) {
         paint(line, CoveragePaintDetails.create(hits, 0, 0));
     }
 
-    public void paint(final int line, final int hits, final int branchCover, final int branchCount) {
+    public void paint(int line, int hits, int branchCover, int branchCount) {
         paint(line, CoveragePaintDetails.create(hits, branchCount, branchCover));
     }
 
-    public void add(final CoveragePaint child) {
+    public void add(CoveragePaint child) {
         TIntObjectIterator<CoveragePaintDetails> it = child.lines.iterator();
         while (it.hasNext()) {
             it.advance();
@@ -167,17 +168,18 @@ public class CoveragePaint implements Serializable {
     /**
      * Setter for the property {@code totalLines}.
      *
-     * @param totalLines
-     *         The total number of lines in this file
+     * @param totalLines The total number of lines in this file
      **/
-    public void setTotalLines(final int totalLines) {
+    public void setTotalLines(int totalLines) {
         this.totalLines = totalLines;
     }
 
     /**
-     * Returns the total number of lines in this painted file. Unlike the denominator in the ratio returned by {@link
-     * #getLineCoverage()}, which only indicates the number of executable lines, this includes even non-executable
-     * lines, such as white space, comments, brackets, and more.
+     * Returns the total number of lines in this painted file. Unlike the
+     * denominator in the ratio returned by {@link #getLineCoverage()},
+     * which only indicates the number of executable lines, this includes
+     * even non-executable lines, such as white space, comments, brackets,
+     * and more.
      *
      * @return value for the property {@code totalLines}.
      **/
@@ -227,59 +229,34 @@ public class CoveragePaint implements Serializable {
         return result;
     }
 
-    public boolean isPainted(final int line) {
+    public boolean isPainted(int line) {
         return lines.get(line) != null;
     }
 
-    public int getHits(final int line) {
+    public int getHits(int line) {
         CoveragePaintDetails d = lines.get(line);
         if (d == null) {
             return 0;
-        }
-        else {
+        } else {
             return d.hitCount;
         }
     }
 
-    public int getBranchTotal(final int line) {
+    public int getBranchTotal(int line) {
         CoveragePaintDetails d = lines.get(line);
         if (d == null) {
             return 0;
-        }
-        else {
+        } else {
             return d.branchCount();
         }
     }
 
-    public int getBranchCoverage(final int line) {
+    public int getBranchCoverage(int line) {
         CoveragePaintDetails d = lines.get(line);
         if (d == null) {
             return 0;
-        }
-        else {
+        } else {
             return d.branchCoverage();
         }
-    }
-
-    /**
-     * Returns the lines of the source file that have no line coverage.
-     *
-     * @return the lines without coverage
-     */
-    public int[] getUncoveredLines() {
-        List<Integer> uncovered = new ArrayList<>();
-        for (TIntObjectIterator<CoveragePaintDetails> it = this.lines.iterator(); it.hasNext(); ) {
-            it.advance();
-            if (it.value().hitCount == 0) {
-                uncovered.add(it.key());
-            }
-        }
-        int[] sorted = ArrayUtils.toPrimitive(uncovered.toArray(new Integer[0]));
-        Arrays.sort(sorted);
-        return sorted;
-    }
-
-    public int[] getAllLines() {
-        return lines.keys();
     }
 }

@@ -152,7 +152,7 @@ var CoverageChartGenerator = function () {
                     stack: 'sum',
                     itemStyle: {
                         normal: {
-                            color: '#A5D6A7'
+                            color: '#009e73'
                         }
                     },
                     label: {
@@ -170,7 +170,7 @@ var CoverageChartGenerator = function () {
                     stack: 'sum',
                     itemStyle: {
                         normal: {
-                            color: '#EF9A9A'
+                            color: '#d55e00'
                         }
                     },
                     label: {
